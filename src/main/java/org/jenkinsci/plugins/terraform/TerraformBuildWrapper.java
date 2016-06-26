@@ -183,13 +183,9 @@ public class TerraformBuildWrapper extends BuildWrapper {
         }
 
         try {
-            EnvVars env = build.getEnvironment(listener);
-
-            String executable = getExecutable(env, listener, launcher);
+            args = new ArgumentListBuilder();
 
             args.add(executable);
-
-            setupWorkspace(build, env);
 
             args.add("apply");
 
