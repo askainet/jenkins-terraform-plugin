@@ -151,9 +151,9 @@ public class TerraformBuildWrapper extends BuildWrapper {
     @Override
     public Environment setUp(AbstractBuild build, final Launcher launcher, final BuildListener listener) throws IOException, InterruptedException {
 
-        ArgumentListBuilder args = new ArgumentListBuilder();
-
         try {
+            ArgumentListBuilder args = new ArgumentListBuilder();
+
             EnvVars env = build.getEnvironment(listener);
 
             String executable = getExecutable(env, listener, launcher);
@@ -183,9 +183,15 @@ public class TerraformBuildWrapper extends BuildWrapper {
         }
 
         try {
-            args = new ArgumentListBuilder();
+            ArgumentListBuilder args = new ArgumentListBuilder();
+
+            EnvVars env = build.getEnvironment(listener);
+
+            String executable = getExecutable(env, listener, launcher);
 
             args.add(executable);
+
+            setupWorkspace(build, env);
 
             args.add("apply");
 
