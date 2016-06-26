@@ -98,7 +98,7 @@ public class TerraformBuildWrapper extends BuildWrapper {
         return this.config.getValue();
     }
 
-    
+
     public boolean doDestroy() {
         return this.doDestroy;
     }
@@ -132,7 +132,7 @@ public class TerraformBuildWrapper extends BuildWrapper {
 
     @Override
     public DescriptorImpl getDescriptor() {
-        return (DescriptorImpl) super.getDescriptor();        
+        return (DescriptorImpl) super.getDescriptor();
     }
 
 
@@ -152,7 +152,36 @@ public class TerraformBuildWrapper extends BuildWrapper {
     public Environment setUp(AbstractBuild build, final Launcher launcher, final BuildListener listener) throws IOException, InterruptedException {
 
         ArgumentListBuilder args = new ArgumentListBuilder();
-            
+
+        try {
+            EnvVars env = build.getEnvironment(listener);
+
+            String executable = getExecutable(env, listener, launcher);
+
+            args.add(executable);
+
+            setupWorkspace(build, env);
+
+            args.add("get");
+
+            args.add("-update=true");
+
+            LOGGER.info("Getting Terraform modules: "+args.toString());
+
+            int result = launcher.launch().pwd(workspacePath.getRemote()).cmds(args).stdout(listener).join();
+
+            if (result != 0) {
+                deleteTemporaryFiles();
+                return null;
+            }
+
+        } catch (Exception ex) {
+            LOGGER.severe(exceptionToString(ex));
+            listener.fatalError(exceptionToString(ex));
+            deleteTemporaryFiles();
+            return null;
+        }
+
         try {
             EnvVars env = build.getEnvironment(listener);
 
@@ -181,14 +210,14 @@ public class TerraformBuildWrapper extends BuildWrapper {
                 deleteTemporaryFiles();
                 return null;
             }
-    
+
         } catch (Exception ex) {
             LOGGER.severe(exceptionToString(ex));
             listener.fatalError(exceptionToString(ex));
             deleteTemporaryFiles();
             return null;
         }
-        
+
         return new Environment() {
 
             @Override
@@ -310,7 +339,7 @@ public class TerraformBuildWrapper extends BuildWrapper {
         return writer.toString();
     }
 
-    
+
     @Extension
     public static final class DescriptorImpl extends BuildWrapperDescriptor {
 
@@ -328,7 +357,7 @@ public class TerraformBuildWrapper extends BuildWrapper {
             return this.installations;
         }
 
-    
+
         public void setInstallations(TerraformInstallation[] installations) {
             this.installations = installations;
             save();
@@ -343,11 +372,11 @@ public class TerraformBuildWrapper extends BuildWrapper {
             return m;
         }
 
-        
+
         public boolean isInlineConfigChecked(TerraformBuildWrapper instance) {
             boolean result = true;
             if (instance != null)
-                return (instance.getInlineConfig() != null); 
+                return (instance.getInlineConfig() != null);
 
             return result;
         }
@@ -356,7 +385,7 @@ public class TerraformBuildWrapper extends BuildWrapper {
         public boolean isFileConfigChecked(TerraformBuildWrapper instance) {
             boolean result = false;
             if (instance != null)
-                return (instance.getFileConfig() != null); 
+                return (instance.getFileConfig() != null);
 
             return result;
         }
@@ -365,7 +394,7 @@ public class TerraformBuildWrapper extends BuildWrapper {
         public boolean isApplicable(AbstractProject<?, ?> project) {
             return true;
         }
-    
+
 
         public String getDisplayName() {
             return Messages.BuildWrapperName();
